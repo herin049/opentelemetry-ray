@@ -15,9 +15,8 @@ permissions:
   id-token: write
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    environment: pypi
     steps:
       - uses: actions/checkout@v4
 
@@ -31,7 +30,35 @@ jobs:
       - name: Build package
         run: python -m build ${{ inputs.package }}
 
-      - name: Publish to PyPI
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: ${{ inputs.package }}/dist/
+
+  publish-testpypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: testpypi
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: ${{ inputs.package }}/dist/
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
