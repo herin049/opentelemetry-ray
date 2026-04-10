@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-instrumentation-ray-serve"
+dynamic = ["version"]
+description = "OpenTelemetry Ray Serve Instrumentation"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "Lukas Hering", email = "lukasheringb@gmail.com" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "opentelemetry-api>=1.25",
+    "opentelemetry-sdk>=1.25",
+    "opentelemetry-instrumentation>=0.46b0",
+    "opentelemetry-instrumentation-fastapi>=0.46b0",
+    "opentelemetry-instrumentation-starlette>=0.46b0",
+    "opentelemetry-instrumentation-asgi>=0.46b0",
+    "wrapt >= 1.14.0, < 3.0.0",
+]
+
+[project.optional-dependencies]
+instruments = [
+    "ray>=2.7",
+]
+
+[tool.hatch.version]
+path = "src/opentelemetry/instrumentation/ray/serve/version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]
+
+[project.entry-points.opentelemetry_instrumentor]
+ray_serve = "opentelemetry.instrumentation.ray.serve:RayServeInstrumentor"
+
+[tool.pytest.ini_options]
+pythonpath = ["tests"]
