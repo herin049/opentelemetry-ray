@@ -24,7 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 instruments = [
-    "ray>=2.7",
+    "ray[serve]>=2.7",
 ]
 
 [tool.hatch.version]
