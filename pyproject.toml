@@ -57,7 +57,8 @@ reportMissingTypeStubs = false
 pythonVersion = "3.9"
 reportPrivateUsage = false
 include = [
-    "opentelemetry-resource-detector-ray/src"
+    "opentelemetry-resource-detector-ray/src",
+    "opentelemetry-instrumentation-ray-serve/src"
 ]
 
 exclude = []

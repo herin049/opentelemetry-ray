@@ -47,7 +47,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable, Collection, Final
 
-from wrapt import wrap_function_wrapper
+from wrapt import wrap_function_wrapper  # type: ignore
 
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.dependencies import get_dependency_conflicts
