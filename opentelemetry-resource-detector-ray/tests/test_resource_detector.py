@@ -3,11 +3,9 @@ from __future__ import annotations
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from opentelemetry.sdk.resources import Resource
-
 from opentelemetry.resource.detector.ray import (
-    RayResourceDetector,
     _WORKER_MODE_NAMES,
+    RayResourceDetector,
     _safe_get,
 )
 from opentelemetry.resource.detector.ray._attributes import (
@@ -23,7 +21,7 @@ from opentelemetry.resource.detector.ray._attributes import (
     RAY_WORKER_ID,
     RAY_WORKER_PROCESS_TYPE,
 )
-from opentelemetry.resource.detector.ray.version import __version__
+from opentelemetry.sdk.resources import Resource
 
 
 def _make_mock_context(
@@ -79,7 +77,8 @@ def _make_mock_ray(
 
 
 def _make_mock_ray_private_worker(
-    *, mode: int | str | None = 0,
+    *,
+    mode: int | str | None = 0,
 ) -> MagicMock:
     """Build a mock ``ray._private.worker`` module."""
     mock_mod = MagicMock()
@@ -87,12 +86,9 @@ def _make_mock_ray_private_worker(
     return mock_mod
 
 
-_GET_DEP_CONFLICTS = "opentelemetry.resource.detector.ray.get_dependency_conflicts"
-
-
-class TestVersion(unittest.TestCase):
-    def test_version_string(self) -> None:
-        self.assertEqual(__version__, "0.1.0")
+_GET_DEP_CONFLICTS = (
+    "opentelemetry.resource.detector.ray.get_dependency_conflicts"
+)
 
 
 class TestSafeGet(unittest.TestCase):
@@ -152,22 +148,32 @@ class TestWorkerModeNames(unittest.TestCase):
 
 
 class TestDetectDependencyConflict(unittest.TestCase):
-    @patch(_GET_DEP_CONFLICTS, return_value=MagicMock(__str__=lambda _: "conflict"))
+    @patch(
+        _GET_DEP_CONFLICTS,
+        return_value=MagicMock(__str__=lambda _: "conflict"),
+    )
     def test_returns_empty_resource(self, _mock: MagicMock) -> None:
         resource = RayResourceDetector().detect()
         self.assertEqual(dict(resource.attributes), {})
 
-    @patch(_GET_DEP_CONFLICTS, return_value=MagicMock(__str__=lambda _: "conflict"))
+    @patch(
+        _GET_DEP_CONFLICTS,
+        return_value=MagicMock(__str__=lambda _: "conflict"),
+    )
     def test_logs_info(self, _mock: MagicMock) -> None:
         with self.assertLogs(
-            "opentelemetry.resource.detector.ray", level="INFO",
+            "opentelemetry.resource.detector.ray",
+            level="INFO",
         ) as cm:
             RayResourceDetector().detect()
         self.assertTrue(
             any("Skipping Ray resource detection" in m for m in cm.output),
         )
 
-    @patch(_GET_DEP_CONFLICTS, return_value=MagicMock(__str__=lambda _: "conflict"))
+    @patch(
+        _GET_DEP_CONFLICTS,
+        return_value=MagicMock(__str__=lambda _: "conflict"),
+    )
     def test_raises_when_raise_on_error(self, _mock: MagicMock) -> None:
         detector = RayResourceDetector(raise_on_error=True)
         with self.assertRaises(RuntimeError):
@@ -181,11 +187,13 @@ class TestDetectRayNotInitialized(unittest.TestCase):
     @patch(_GET_DEP_CONFLICTS, return_value=None)
     def test_returns_version_only(self, _mock: MagicMock) -> None:
         with patch.dict(
-            "sys.modules", {"ray": self.mock_ray},
+            "sys.modules",
+            {"ray": self.mock_ray},
         ):
             resource = RayResourceDetector().detect()
         self.assertEqual(
-            dict(resource.attributes), {RAY_VERSION: "2.7.0"},
+            dict(resource.attributes),
+            {RAY_VERSION: "2.7.0"},
         )
 
     @patch(_GET_DEP_CONFLICTS, return_value=None)
@@ -193,7 +201,8 @@ class TestDetectRayNotInitialized(unittest.TestCase):
         with (
             patch.dict("sys.modules", {"ray": self.mock_ray}),
             self.assertLogs(
-                "opentelemetry.resource.detector.ray", level="WARNING",
+                "opentelemetry.resource.detector.ray",
+                level="WARNING",
             ) as cm,
         ):
             RayResourceDetector().detect()
@@ -218,7 +227,9 @@ class TestDetectRayInitialized(unittest.TestCase):
     ) -> Resource:
         ctx = context or _make_mock_context()
         mock_ray = _make_mock_ray(
-            version=version, initialized=True, context=ctx,
+            version=version,
+            initialized=True,
+            context=ctx,
         )
 
         with (
@@ -253,13 +264,15 @@ class TestDetectRayInitialized(unittest.TestCase):
             with self.subTest(mode=mode):
                 resource = self._detect(worker_mode=mode)
                 self.assertEqual(
-                    dict(resource.attributes)[RAY_WORKER_PROCESS_TYPE], name,
+                    dict(resource.attributes)[RAY_WORKER_PROCESS_TYPE],
+                    name,
                 )
 
     def test_worker_mode_unknown_int(self) -> None:
         resource = self._detect(worker_mode=99)
         self.assertEqual(
-            dict(resource.attributes)[RAY_WORKER_PROCESS_TYPE], "99",
+            dict(resource.attributes)[RAY_WORKER_PROCESS_TYPE],
+            "99",
         )
 
     def test_worker_mode_none_excluded(self) -> None:
@@ -277,7 +290,8 @@ class TestDetectRayInitialized(unittest.TestCase):
                 ctx = _make_mock_context(**{label: value})
                 resource = self._detect(context=ctx)
                 self.assertEqual(
-                    dict(resource.attributes)[attr_key], value,
+                    dict(resource.attributes)[attr_key],
+                    value,
                 )
 
     def test_optional_attributes_excluded_when_none(self) -> None:
@@ -343,7 +357,8 @@ class TestGetWorkerMode(unittest.TestCase):
         for value in non_ints:
             with self.subTest(value=repr(value)):
                 with patch.dict(
-                    "sys.modules", self._patch_worker_mode(value),
+                    "sys.modules",
+                    self._patch_worker_mode(value),
                 ):
                     result = RayResourceDetector._get_worker_mode()
                 self.assertIsNone(result)

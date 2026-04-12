@@ -1,25 +1,73 @@
+"""
+OpenTelemetry Instrumentation for Ray Serve
+============================================
+
+This package provides a :class:`RayServeInstrumentor` that automatically
+instruments `Ray Serve <https://docs.ray.io/en/latest/serve/index.html>`_
+deployments so that every incoming request is traced with
+`OpenTelemetry <https://opentelemetry.io/>`_.
+
+Usage
+-----
+
+Enable instrumentation before deploying your Ray Serve application:
+
+.. code-block:: python
+
+    from opentelemetry.instrumentation.ray.serve import RayServeInstrumentor
+
+    RayServeInstrumentor().instrument()
+
+The instrumentor can also be loaded automatically via the
+``opentelemetry_instrumentor`` entry-point by using the
+``opentelemetry-instrument`` CLI command.
+
+How It Works
+------------
+
+When a Ray Serve replica is initialized, the instrumentor inspects the
+underlying ASGI application and applies the most appropriate tracing
+strategy:
+
+1. **FastAPI** applications are instrumented with
+   ``FastAPIInstrumentor`` from ``opentelemetry-instrumentation-fastapi``.
+2. **Starlette** applications are instrumented with
+   ``StarletteInstrumentor`` from ``opentelemetry-instrumentation-starlette``.
+3. **Raw ASGI** callables are wrapped with
+   ``OpenTelemetryMiddleware`` from ``opentelemetry-instrumentation-asgi``.
+
+FastAPI is checked before Starlette given that ``FastAPI`` is a subclass of
+``Starlette``.  If a framework-specific instrumentor is selected, the
+generic ASGI middleware is **not** applied, preventing double-wrapping.
+"""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Collection
+from typing import Any, Callable, Collection, Final
 
 from wrapt import wrap_function_wrapper
 
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.dependencies import get_dependency_conflicts
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.instrumentation.utils import unwrap
-
 from opentelemetry.instrumentation.ray.serve.package import _instruments
+from opentelemetry.instrumentation.utils import unwrap
 
 _logger = logging.getLogger(__name__)
 
-_RAY_HTTP_UTIL_MODULE: str = "ray.serve._private.http_util"
-_WRAPPED_CLASS: str = "ASGIAppReplicaWrapper"
-_WRAPPED_METHOD: str = "__init__"
+_RAY_HTTP_UTIL_MODULE: Final[str] = "ray.serve._private.http_util"
+_WRAPPED_CLASS: Final[str] = "ASGIAppReplicaWrapper"
+_WRAPPED_METHOD: Final[str] = "__init__"
 
 
 class RayServeInstrumentor(BaseInstrumentor):
+    """Instrumentor for `Ray Serve <https://docs.ray.io/en/latest/serve/index.html>`_.
+
+    Hooks into ``ray.serve._private.http_util.ASGIAppReplicaWrapper`` to
+    transparently add OpenTelemetry tracing to every Ray Serve deployment.
+    """
+
     def instrumentation_dependencies(self) -> Collection[str]:
         return _instruments
 
@@ -31,7 +79,9 @@ class RayServeInstrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self, **kwargs: Any) -> None:
-        from ray.serve._private import http_util  # pylint: disable=import-outside-toplevel
+        from ray.serve._private import (
+            http_util,  # pylint: disable=import-outside-toplevel
+        )
 
         unwrap(http_util.ASGIAppReplicaWrapper, _WRAPPED_METHOD)
 

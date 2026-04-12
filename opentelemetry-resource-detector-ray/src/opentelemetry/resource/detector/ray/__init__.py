@@ -59,8 +59,6 @@ import logging
 from typing import Any, cast
 
 from opentelemetry.instrumentation.dependencies import get_dependency_conflicts
-from opentelemetry.sdk.resources import Resource, ResourceDetector
-
 from opentelemetry.resource.detector.ray._attributes import (
     RAY_ACTOR_ID,
     RAY_CLUSTER_GCS_ADDRESS,
@@ -75,6 +73,7 @@ from opentelemetry.resource.detector.ray._attributes import (
     RAY_WORKER_PROCESS_TYPE,
 )
 from opentelemetry.resource.detector.ray.package import _detects
+from opentelemetry.sdk.resources import Resource, ResourceDetector
 
 _logger = logging.getLogger(__name__)
 

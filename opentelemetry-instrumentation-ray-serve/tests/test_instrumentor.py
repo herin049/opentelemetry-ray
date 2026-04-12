@@ -39,7 +39,8 @@ def _install_fake_starlette(
     """Build a sys.modules patch dict for a fake starlette package."""
     starlette_pkg = _make_fake_module("starlette")
     applications = _make_fake_module(
-        "starlette.applications", Starlette=starlette_class,
+        "starlette.applications",
+        Starlette=starlette_class,
     )
     return {
         "starlette": starlette_pkg,
@@ -64,7 +65,8 @@ class TestInstrumentationDependencies(unittest.TestCase):
 class TestInstrument(unittest.TestCase):
     @patch(f"{_MODULE}.wrap_function_wrapper")
     def test_calls_wrap_function_wrapper(
-        self, mock_wrap: MagicMock,
+        self,
+        mock_wrap: MagicMock,
     ) -> None:
         RayServeInstrumentor()._instrument()
         mock_wrap.assert_called_once_with(
@@ -82,7 +84,8 @@ class TestUninstrument(unittest.TestCase):
             ASGIAppReplicaWrapper=fake_class,
         )
         fake_private = _make_fake_module(
-            "ray.serve._private", http_util=fake_http_util,
+            "ray.serve._private",
+            http_util=fake_http_util,
         )
         fake_serve = _make_fake_module("ray.serve", _private=fake_private)
         fake_ray = _make_fake_module("ray", serve=fake_serve)
@@ -117,7 +120,8 @@ class TestWrapAsgiAppReplicaWrapperInit(unittest.TestCase):
 
     @patch(f"{_MODULE}._instrument_asgi_app")
     def test_calls_instrument_asgi_app_after_wrapped(
-        self, mock_instrument: MagicMock,
+        self,
+        mock_instrument: MagicMock,
     ) -> None:
         order: list[str] = []
         wrapped = MagicMock(side_effect=lambda: order.append("wrapped"))
@@ -131,14 +135,18 @@ class TestWrapAsgiAppReplicaWrapperInit(unittest.TestCase):
 
     @patch(f"{_MODULE}._instrument_asgi_app", side_effect=RuntimeError("boom"))
     def test_swallows_instrumentation_exception(
-        self, _mock: MagicMock,
+        self,
+        _mock: MagicMock,
     ) -> None:
         wrapped = MagicMock(return_value=None)
         instance = MagicMock()
 
         with self.assertLogs(_MODULE, level="ERROR") as cm:
             _wrap_asgi_app_replica_wrapper_init(
-                wrapped, instance, (), {},
+                wrapped,
+                instance,
+                (),
+                {},
             )
 
         self.assertTrue(
@@ -151,7 +159,10 @@ class TestWrapAsgiAppReplicaWrapperInit(unittest.TestCase):
         instance._asgi_app = None
 
         result = _wrap_asgi_app_replica_wrapper_init(
-            wrapped, instance, (), {},
+            wrapped,
+            instance,
+            (),
+            {},
         )
         self.assertIsNone(result)
 
@@ -161,7 +172,10 @@ class TestWrapAsgiAppReplicaWrapperInit(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             _wrap_asgi_app_replica_wrapper_init(
-                wrapped, instance, (), {},
+                wrapped,
+                instance,
+                (),
+                {},
             )
 
 
@@ -265,8 +279,6 @@ class TestInstrumentAsgiApp(unittest.TestCase):
             patch(f"{_MODULE}._try_instrument_starlette") as mock_st_try,
             patch(f"{_MODULE}.OpenTelemetryMiddleware") as mock_mw,
         ):
-            # _try_instrument_fastapi may silently no-op on conflict; the
-            # caller cannot tell. Either way, we must not fall through.
             mock_fa_try.return_value = None
             _instrument_asgi_app(instance)
 
@@ -321,7 +333,8 @@ class TestIsFastapiApp(unittest.TestCase):
 class TestIsStarletteApp(unittest.TestCase):
     def test_returns_true_for_instance(self) -> None:
         with patch.dict(
-            sys.modules, _install_fake_starlette(_FakeStarlette),
+            sys.modules,
+            _install_fake_starlette(_FakeStarlette),
         ):
             self.assertTrue(_is_starlette_app(_FakeStarlette()))
 
@@ -334,7 +347,8 @@ class TestIsStarletteApp(unittest.TestCase):
             _FakeFastAPI(),
         ]
         with patch.dict(
-            sys.modules, _install_fake_starlette(_FakeStarlette),
+            sys.modules,
+            _install_fake_starlette(_FakeStarlette),
         ):
             for value in non_starlette:
                 with self.subTest(value=repr(value)):
@@ -371,7 +385,8 @@ class TestTryInstrumentFastapi(unittest.TestCase):
     def test_instruments_when_no_conflict(self) -> None:
         app = object()
         with patch(
-            f"{_MODULE}.get_dependency_conflicts", return_value=None,
+            f"{_MODULE}.get_dependency_conflicts",
+            return_value=None,
         ) as mock_conf:
             _try_instrument_fastapi(app)
 
@@ -421,7 +436,8 @@ class TestTryInstrumentStarlette(unittest.TestCase):
     def test_instruments_when_no_conflict(self) -> None:
         app = object()
         with patch(
-            f"{_MODULE}.get_dependency_conflicts", return_value=None,
+            f"{_MODULE}.get_dependency_conflicts",
+            return_value=None,
         ) as mock_conf:
             _try_instrument_starlette(app)
 
@@ -446,7 +462,3 @@ class TestTryInstrumentStarlette(unittest.TestCase):
         self.assertTrue(
             any("Skipping Starlette" in m for m in cm.output),
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

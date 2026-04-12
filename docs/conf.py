@@ -18,6 +18,17 @@ sys.path.insert(
         ),
     ),
 )
+sys.path.insert(
+    0,
+    os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "opentelemetry-instrumentation-ray-serve",
+            "src",
+        ),
+    ),
+)
 
 project = "OpenTelemetry Ray"
 copyright = "Lukas Hering"  # noqa: A001
@@ -47,5 +58,11 @@ autodoc_default_options = {
 }
 
 nitpicky = True
+nitpick_ignore = [
+    (
+        "py:class",
+        "opentelemetry.instrumentation.instrumentor.BaseInstrumentor",
+    ),
+]
 
 html_theme = "sphinx_rtd_theme"

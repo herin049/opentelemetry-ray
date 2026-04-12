@@ -6,6 +6,12 @@ OpenTelemetry utilities for
 
 .. toctree::
    :maxdepth: 2
+   :caption: Instrumentations
+
+   instrumentation/ray_serve
+
+.. toctree::
+   :maxdepth: 2
    :caption: Resource Detectors
 
    resource/ray
