@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - opentelemetry-resource-detector-ray
+          - opentelemetry-instrumentation-ray-serve
 
 permissions:
   contents: read

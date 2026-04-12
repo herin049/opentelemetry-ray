@@ -3,7 +3,8 @@ name = "opentelemetry-ray"
 version = "0.0.0"
 requires-python = ">=3.9"
 dependencies = [
-    "opentelemetry-resource-detector-ray[detects]"
+    "opentelemetry-resource-detector-ray[detects]",
+    "opentelemetry-instrumentation-ray-serve[instruments]"
 ]
 
 # https://docs.astral.sh/uv/reference/settings/
@@ -13,10 +14,12 @@ required-version = ">=0.6.0"
 
 [tool.uv.sources]
 opentelemetry-resource-detector-ray = { workspace = true }
+opentelemetry-instrumentation-ray-serve = { workspace = true }
 
 [tool.uv.workspace]
 members = [
     "opentelemetry-resource-detector-ray",
+    "opentelemetry-instrumentation-ray-serve",
 ]
 
 [tool.ruff]
