@@ -52,6 +52,7 @@ The following attributes are reported when available:
 - ``ray.cluster.session_name``
 - ``ray.cluster.gcs_address``
 """
+# ruff: noqa: PLC0415
 
 from __future__ import annotations
 
