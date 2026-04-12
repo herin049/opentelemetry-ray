@@ -40,13 +40,14 @@ FastAPI is checked before Starlette given that ``FastAPI`` is a subclass of
 ``Starlette``.  If a framework-specific instrumentor is selected, the
 generic ASGI middleware is **not** applied, preventing double-wrapping.
 """
+# ruff: noqa: PLC0415
 
 from __future__ import annotations
 
 import logging
 from typing import Any, Callable, Collection, Final
 
-from wrapt import wrap_function_wrapper
+from wrapt import wrap_function_wrapper  # type: ignore
 
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.dependencies import get_dependency_conflicts
@@ -79,8 +80,9 @@ class RayServeInstrumentor(BaseInstrumentor):
         )
 
     def _uninstrument(self, **kwargs: Any) -> None:
+        # pylint: disable=import-outside-toplevel
         from ray.serve._private import (
-            http_util,  # pylint: disable=import-outside-toplevel
+            http_util,
         )
 
         unwrap(http_util.ASGIAppReplicaWrapper, _WRAPPED_METHOD)
